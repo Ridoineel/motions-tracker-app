@@ -1,3 +1,3 @@
 PyQt5
 psutil
-motionstracker==2.1.1
+motionstracker
