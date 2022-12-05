@@ -6,6 +6,14 @@
 > MotionsTracker is a module that allows you to
 > Track the movements of webcam images and save them as images or as a single video
 
+<center>
+
+![dd](/assets/images/view.png)
+
+Screenshot of the app
+
+</center>
+
 ## How do i install this app ?
 
 #### Linux
