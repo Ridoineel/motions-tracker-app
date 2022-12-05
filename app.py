@@ -4,6 +4,7 @@ import datetime
 from os.path import dirname, join, isdir
 from model import Ui_MainWindow
 from PyQt5.QtWidgets import QMainWindow, QFileDialog, QApplication
+from PyQt5.QtCore import QTimer
 
 from utils.functions import *
 
@@ -26,6 +27,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		self.isRunning = False
 		self.startDate = None
 		self.endDate = None
+		self.timer = QTimer()
 
 		self.setupComponents()
 		self.setFieldsConstraint()
@@ -56,6 +58,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 				durationValue = int(duration[:-1]) # 13
 				durationDescription = duration[-1] # "m"
 
+				if durationDescription == "m":
+					durationDescription = "min"
+				elif durationDescription == "s":
+					durationDescription = "sec"
+				elif durationDescription == "h":
+					durationDescription = "hours"
+				else:
+					durationDescription = "oo"
+
 				self.durationDescriptionField.setCurrentText(durationDescription)
 				self.durationField.setValue(durationValue)
 
@@ -69,10 +80,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 			try:
 				self.subprocess = psutil.Process(motionstrackerPid)
 			except Exception as e:
-				print(e)
+				# print(e)
 				self.setActivateBtnDeactivationStyle()
 			else:
 				self.setActivateBtnActivationStyle()
+				self.timer.start(1000)
+				
 
 		if accuracy:
 			self.accuracyField.setValue(accuracy)
@@ -92,6 +105,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		self.activateButton.clicked.connect(self.handleClickOnActivateBtn)
 		self.chooseButton.clicked.connect(self.handleClickOnChooseBtn)
 		self.durationDescriptionField.activated.connect(self.handleClickOnDescriptionCbox)
+		self.timer.timeout.connect(self.timerEventCallback)
+
+	def timerEventCallback(self):
+		if not self.endDate:
+			return
+
+		nowDate = datetime.datetime.now()
+
+		if self.endDate <= nowDate:
+			self.setActivateBtnDeactivationStyle()
+			self.timer.stop()
 
 	def handleClickOnDescriptionCbox(self):
 		desc = self.durationDescriptionField.currentText()
@@ -143,11 +167,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 			command += ["-d", str(durationValue) + durationDescription[0]]
 		
 		try:
-			print(command)
+			# print(command)
 			self.subprocess = psutil.Popen(command)
 		except Exception as e:
 			print(e)
 		else:
+			# start timer
+			self.timer.start(1000)
 
 			# set start date and end date
 			# and update activateButton style
@@ -166,7 +192,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 			if isdir(directory):
 				self.configs["outputDirectory"] = directory
 
-			self.configs["dateStartIsoFormat"] = datetime.datetime.now().isoformat()
+			self.configs["dateStart"] = datetime.datetime.now().isoformat()
 
 			self.configs["accuracy"] = float(accuracy)
 			self.configs["outputFormat"] = outputFormat
@@ -219,11 +245,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		"""	
 
 		self.startDate = startDate
-		durationSeconds = 0
+		self.endDate = None
+		durationSeconds = self.getDuration(durationValue, durationDescription)
 
-		if durationDescription == "oo":
-			self.endDate = None
-		else:
+		if durationSeconds:
+			self.endDate = self.startDate + datetime.timedelta(seconds=durationSeconds)
+
+	def getDuration(self, durationValue, durationDescription):
+		""" get duration (second) 
+			with duration integer and duration description
+
+		"""
+
+		durationSeconds = None
+
+		if durationDescription != "oo":
 			dd = durationDescription[0]
 
 			if dd == "s":
@@ -233,8 +269,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 			else:
 				durationSeconds = durationValue * 3600
 
-			self.endDate = self.startDate + datetime.timedelta(seconds=durationSeconds)
-
+		
+		return durationSeconds
 
 
 	def closeEvent(self, event):
