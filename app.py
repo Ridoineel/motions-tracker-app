@@ -153,7 +153,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 		command = [
 			sys.executable, # python executable 
-			"/home/ridoineel/Dev/motions-tracker/src/motionstracker", 
+			"-m", "motionstracker", 
 			"-o", directory, 
 			"-ac",  str(accuracy),
 			"-f", outputFormat
@@ -167,7 +167,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 			command += ["-d", str(durationValue) + durationDescription[0]]
 		
 		try:
-			# print(command)
+			print(command)
 			self.subprocess = psutil.Popen(command)
 		except Exception as e:
 			print(e)
