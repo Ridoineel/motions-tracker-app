@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=2.0.1
+Type=Application
+Name=motions-tracker-app
+Exec=motions-tracker-app
+Icon=
+Categories=Utility
+Terminal=true
+StartupNotify=true
+StartupWMClass=motions-tracker-app
